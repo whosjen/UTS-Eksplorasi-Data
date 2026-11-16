@@ -483,6 +483,20 @@ ui <- dashboardPage(
             verbatimTextOutput("uji_simultan")
           )
         ),
+        # UJI MULTIKOLINEARITAS
+        fluidRow(
+          box(
+            title = "E. Uji Multikolinearitas (VIF)",
+            status = "warning",
+            solidHeader = TRUE,
+            width = 12,
+            p("Uji multikolinearitas dilakukan untuk mengetahui
+              apakah terdapat hubungan linear yang kuat
+              antarvariabel independen menggunakan Variance
+              Inflation Factor (VIF)."),
+            DTOutput("uji_multikolinearitas")
+          )
+        ),
         # ASUMSI
         fluidRow(
           box(
@@ -1370,6 +1384,31 @@ server <- function(input, output, session) {
       cat("Kesimpulan: variabel independen secara simultan
           tidak signifikan terhadap Produksi.")
     }
+  })
+  # UJI MULTIKOLINEARITAS VIF
+  output$uji_multikolinearitas <- renderDT({
+    req(model_regresi())
+    nilai_vif <- car::vif(model_regresi())
+    hasil <- data.frame(
+      Variabel = names(nilai_vif),
+      VIF = as.numeric(nilai_vif)
+    ) %>%
+      mutate(
+        Keterangan = ifelse(
+          VIF < 5,
+          "Tidak terdapat indikasi multikolinearitas kuat",
+          "Terdapat indikasi multikolinearitas"
+        ),
+        VIF = round(VIF, 4)
+      )
+    datatable(
+      hasil,
+      options = list(
+        pageLength = 5,
+        scrollX = TRUE
+      ),
+      rownames = FALSE
+    )
   })
   # UJI NORMALITAS KOLMOGOROV-SMIRNOV
   output$uji_normalitas <- renderPrint({
